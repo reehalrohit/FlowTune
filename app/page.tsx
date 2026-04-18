@@ -32,14 +32,13 @@ const chartQueryMap: Record<string, string> = {
 
 export default function Page() {
   const [query, setQuery] = useState("");
-const [songs, setSongs] = useState<Song[]>([]);
-const [current, setCurrent] = useState("");
-const [currentSong, setCurrentSong] = useState<Song | null>(null);
-const [quality, setQuality] = useState("Normal");
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [current, setCurrent] = useState("");
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [quality, setQuality] = useState("Normal");
 
   const [recent, setRecent] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Song[]>([]);
-
   const [activeChart, setActiveChart] = useState("Top 50");
   const [loading, setLoading] = useState(false);
 
@@ -54,43 +53,38 @@ const [quality, setQuality] = useState("Normal");
   }, []);
 
   function saveRecent(value: string) {
-    const updated = [
-      value,
-      ...recent.filter((x) => x !== value),
-    ].slice(0, 8);
+    const updated = [value, ...recent.filter((x) => x !== value)].slice(0, 8);
 
     setRecent(updated);
-    localStorage.setItem(
-      "recentSearches",
-      JSON.stringify(updated)
-    );
+    localStorage.setItem("recentSearches", JSON.stringify(updated));
   }
 
   function toggleFavorite(song: Song) {
-    const exists = favorites.find(
-      (x) => x.id === song.id
-    );
+    const exists = favorites.find((x) => x.id === song.id);
 
     const updated = exists
       ? favorites.filter((x) => x.id !== song.id)
       : [song, ...favorites];
 
     setFavorites(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
+  }
 
-    localStorage.setItem(
-      "favorites",
-      JSON.stringify(updated)
-    );
+  function playSong(song: Song) {
+    setCurrent(song.id);
+    setCurrentSong(song);
+  }
+
+  function closePlayer() {
+    setCurrent("");
+    setCurrentSong(null);
   }
 
   async function fetchSongs(search: string) {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `/api/search?q=${encodeURIComponent(search)}`
-      );
-
+      const res = await fetch(`/api/search?q=${encodeURIComponent(search)}`);
       const data = await res.json();
 
       const results =
@@ -125,25 +119,16 @@ const [quality, setQuality] = useState("Normal");
   return (
     <main className="min-h-screen bg-black text-white pb-32">
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <h1 className="text-5xl font-black text-green-500">
-          FlowTune
-        </h1>
+        <h1 className="text-5xl font-black text-green-500">FlowTune</h1>
 
-        <p className="text-zinc-400 mt-2">
-          Music Everywhere
-        </p>
+        <p className="text-zinc-400 mt-2">Music Everywhere</p>
 
         {/* Search */}
         <div className="flex gap-2 mt-6">
           <input
             value={query}
-            onChange={(e) =>
-              setQuery(e.target.value)
-            }
-            onKeyDown={(e) =>
-              e.key === "Enter" &&
-              searchSongs()
-            }
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && searchSongs()}
             placeholder="Search songs..."
             className="flex-1 h-14 px-4 rounded-2xl bg-zinc-900 border border-zinc-800 outline-none"
           />
@@ -159,9 +144,7 @@ const [quality, setQuality] = useState("Normal");
         {/* Recent */}
         {recent.length > 0 && (
           <div className="mt-6">
-            <h2 className="text-lg font-bold mb-3">
-              Recent Searches
-            </h2>
+            <h2 className="text-lg font-bold mb-3">Recent Searches</h2>
 
             <div className="flex gap-2 flex-wrap">
               {recent.map((item) => (
@@ -183,45 +166,33 @@ const [quality, setQuality] = useState("Normal");
         {/* Favorites */}
         {favorites.length > 0 && (
           <div className="mt-8">
-            <h2 className="text-lg font-bold mb-3">
-              Favorites
-            </h2>
+            <h2 className="text-lg font-bold mb-3">Favorites</h2>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {favorites
-                .slice(0, 4)
-                .map((song) => (
-                  <button
-  key={song.id}
-  onClick={() => {
-    setCurrent(song.id);
-    setCurrentSong(song);
-  }}
-  className="rounded-2xl overflow-hidden bg-zinc-900"
->
-                    <img
-                      src={song.thumbnail}
-                      className="w-full aspect-square object-cover"
-                    />
+              {favorites.slice(0, 4).map((song) => (
+                <button
+                  key={song.id}
+                  onClick={() => playSong(song)}
+                  className="rounded-2xl overflow-hidden bg-zinc-900"
+                >
+                  <img
+                    src={song.thumbnail}
+                    alt={song.title}
+                    className="w-full aspect-square object-cover"
+                  />
 
-                    <div className="p-2 text-sm line-clamp-2">
-                      {song.title}
-                    </div>
-                  </button>
-                ))}
+                  <div className="p-2 text-sm line-clamp-2">{song.title}</div>
+                </button>
+              ))}
             </div>
           </div>
         )}
 
         {/* Hero */}
         <div className="mt-8 rounded-3xl p-5 bg-gradient-to-r from-green-500 to-emerald-700 text-black">
-          <div className="text-sm font-bold uppercase">
-            Trending Now
-          </div>
+          <div className="text-sm font-bold uppercase">Trending Now</div>
 
-          <div className="text-3xl font-black mt-2">
-            {activeChart}
-          </div>
+          <div className="text-3xl font-black mt-2">{activeChart}</div>
 
           <div className="text-sm mt-2 opacity-80">
             Tap categories to switch charts
@@ -234,19 +205,13 @@ const [quality, setQuality] = useState("Normal");
             {chartTags.map((tag) => (
               <button
                 key={tag}
-                onClick={() =>
-                  loadChart(tag)
-                }
+                onClick={() => loadChart(tag)}
                 disabled={loading}
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${
                   activeChart === tag
                     ? "bg-green-500 text-black scale-105"
                     : "bg-zinc-900 border border-zinc-800 text-white"
-                } ${
-                  loading
-                    ? "opacity-70"
-                    : "active:scale-95"
-                }`}
+                } ${loading ? "opacity-70" : "active:scale-95"}`}
               >
                 {tag}
               </button>
@@ -256,9 +221,7 @@ const [quality, setQuality] = useState("Normal");
           <div className="h-1 mt-2 rounded-full bg-zinc-900 overflow-hidden">
             <div
               className={`h-full bg-green-500 transition-all duration-500 ${
-                loading
-                  ? "w-1/2 animate-pulse"
-                  : "w-full"
+                loading ? "w-1/2 animate-pulse" : "w-full"
               }`}
             />
           </div>
@@ -267,9 +230,7 @@ const [quality, setQuality] = useState("Normal");
         {/* Songs Grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-5">
           {songs.map((song, index) => {
-            const liked = favorites.find(
-              (x) => x.id === song.id
-            );
+            const liked = favorites.some((x) => x.id === song.id);
 
             return (
               <div
@@ -279,6 +240,7 @@ const [quality, setQuality] = useState("Normal");
                 <div className="relative">
                   <img
                     src={song.thumbnail}
+                    alt={song.title}
                     className="w-full aspect-square object-cover"
                   />
 
@@ -287,10 +249,7 @@ const [quality, setQuality] = useState("Normal");
                   </div>
 
                   <button
-                    onClick={() =>
-                      setCurrent(song.id);
-setCurrentSong(song);
-                    }
+                    onClick={() => playSong(song)}
                     className="absolute bottom-3 right-3 h-11 w-11 rounded-full bg-green-500 text-black font-black"
                   >
                     ▶
@@ -308,19 +267,14 @@ setCurrentSong(song);
 
                   <div className="flex gap-2 mt-3">
                     <button
-                      onClick={() =>
-                        setCurrent(song.id);
-setCurrentSong(song);
-                      }
+                      onClick={() => playSong(song)}
                       className="flex-1 py-2 rounded-xl bg-green-500 text-black text-sm font-bold"
                     >
                       Play
                     </button>
 
                     <button
-                      onClick={() =>
-                        toggleFavorite(song)
-                      }
+                      onClick={() => toggleFavorite(song)}
                       className="px-3 rounded-xl bg-zinc-800"
                     >
                       {liked ? "♥" : "♡"}
@@ -337,16 +291,15 @@ setCurrentSong(song);
       {current && (
         <div className="fixed bottom-3 left-3 right-3 z-50">
           <div className="max-w-5xl mx-auto rounded-2xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl overflow-hidden">
-            {/* Progress */}
             <div className="h-1 bg-zinc-800">
               <div className="h-full w-1/3 bg-green-500 rounded-r-full" />
             </div>
 
-            {/* Player Top */}
             <div className="flex items-center gap-3 p-3">
               <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0">
                 <img
                   src={`https://i.ytimg.com/vi/${current}/mqdefault.jpg`}
+                  alt="Now Playing"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -366,29 +319,19 @@ setCurrentSong(song);
               </button>
 
               <button
-                onClick={() =>
-                  setCurrent("")
-                }
+                onClick={closePlayer}
                 className="h-9 w-9 rounded-full bg-zinc-800"
               >
                 ✕
               </button>
             </div>
 
-            {/* Quality Selector */}
             <div className="px-3 pb-3">
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {[
-                  "Data Saver",
-                  "Normal",
-                  "High",
-                  "Best",
-                ].map((q) => (
+                {["Data Saver", "Normal", "High", "Best"].map((q) => (
                   <button
                     key={q}
-                    onClick={() =>
-                      setQuality(q)
-                    }
+                    onClick={() => setQuality(q)}
                     className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                       quality === q
                         ? "bg-green-500 text-black"
@@ -413,4 +356,4 @@ setCurrentSong(song);
       )}
     </main>
   );
-                      }
+        }
