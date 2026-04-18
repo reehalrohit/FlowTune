@@ -34,7 +34,7 @@ export default function Page() {
   const [query, setQuery] = useState("");
   const [songs, setSongs] = useState<Song[]>([]);
   const [current, setCurrent] = useState("");
-  const [quality] = useState("Normal");
+  const [quality, setQuality] = useState("Normal");
 
   const [recent, setRecent] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Song[]>([]);
@@ -372,7 +372,25 @@ export default function Page() {
                 ✕
               </button>
             </div>
-          </div>
+          
+          {/* Quality Selector */}
+<div className="px-3 pb-3">
+  <div className="flex gap-2 overflow-x-auto pb-1">
+    {["Data Saver", "Normal", "High", "Best"].map((q) => (
+      <button
+        key={q}
+        onClick={() => setQuality(q)}
+        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+          quality === q
+            ? "bg-green-500 text-black"
+            : "bg-zinc-800 text-white"
+        }`}
+      >
+        {q}
+      </button>
+    ))}
+  </div>
+</div>
 
           <iframe
             width="0"
@@ -385,4 +403,5 @@ export default function Page() {
       )}
     </main>
   );
-            }
+        }
+                  
