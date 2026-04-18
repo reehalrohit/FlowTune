@@ -15,12 +15,26 @@ export default function Page() {
   const [playing, setPlaying] = useState(false);
   const [quality, setQuality] = useState("Best");
   const [favorites, setFavorites] = useState<Song[]>([]);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const f = localStorage.getItem("favorites");
     if (f) setFavorites(JSON.parse(f));
     loadTrending();
   }, []);
+
+  useEffect(() => {
+    if (!playing || !currentSong) return;
+
+    const timer = setInterval(() => {
+      setProgress((old) => {
+        if (old >= 100) return 0;
+        return old + 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [playing, currentSong]);
 
   async function loadTrending() {
     const res = await fetch("/api/search?q=top songs");
@@ -56,6 +70,7 @@ export default function Page() {
   function playSong(song: Song) {
     setCurrentSong(song);
     setPlaying(true);
+    setProgress(0);
   }
 
   function toggleFavorite(song: Song) {
@@ -103,7 +118,6 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-black text-white pb-44">
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-5xl font-black text-green-500">
@@ -167,7 +181,7 @@ export default function Page() {
           ))}
         </div>
 
-        {/* Songs Grid */}
+        {/* Songs */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-8">
           {songs.map((song) => {
             const liked = favorites.find(
@@ -226,12 +240,18 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Spotify Mini Player */}
+      {/* Mini Player */}
       {currentSong && (
         <div className="fixed bottom-3 left-3 right-3 z-50">
           <div className="max-w-5xl mx-auto rounded-3xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl overflow-hidden">
+            {/* Progress */}
             <div className="h-1 bg-zinc-800">
-              <div className="h-full w-1/3 bg-green-500 rounded-r-full" />
+              <div
+                className="h-full bg-green-500 rounded-r-full transition-all duration-1000"
+                style={{
+                  width: `${progress}%`,
+                }}
+              />
             </div>
 
             <div className="p-3">
@@ -282,9 +302,11 @@ export default function Page() {
                 </button>
 
                 <button
-                  onClick={() =>
-                    setCurrentSong(null)
-                  }
+                  onClick={() => {
+                    setCurrentSong(null);
+                    setPlaying(false);
+                    setProgress(0);
+                  }}
                   className="h-10 w-10 rounded-full bg-zinc-800"
                 >
                   ✕
@@ -317,7 +339,7 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Playback via YouTube */}
+          {/* Hidden Playback */}
           {playing && (
             <iframe
               width="0"
@@ -331,4 +353,4 @@ export default function Page() {
       )}
     </main>
   );
-          }
+        }
