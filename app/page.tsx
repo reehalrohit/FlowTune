@@ -19,7 +19,7 @@ export default function Page() {
 
     try {
       const res = await fetch(
-        `https://piped.video/api/search?q=${encodeURIComponent(
+        `https://pipedapi.kavin.rocks/search?q=ch?q=${encodeURIComponent(
           query
         )}&filter=videos`
       );
