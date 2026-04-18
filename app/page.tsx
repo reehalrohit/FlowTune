@@ -39,8 +39,7 @@ export default function Page() {
   const [recent, setRecent] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Song[]>([]);
 
-  const [activeChart, setActiveChart] =
-    useState("Top 50");
+  const [activeChart, setActiveChart] = useState("Top 50");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -60,7 +59,6 @@ export default function Page() {
     ].slice(0, 8);
 
     setRecent(updated);
-
     localStorage.setItem(
       "recentSearches",
       JSON.stringify(updated)
@@ -120,7 +118,6 @@ export default function Page() {
   async function loadChart(tag: string) {
     setActiveChart(tag);
     setQuery(tag);
-
     await fetchSongs(chartQueryMap[tag] || tag);
   }
 
@@ -229,7 +226,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Charts Pro UI */}
+        {/* Charts */}
         <div className="mt-4">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {chartTags.map((tag) => (
@@ -254,7 +251,6 @@ export default function Page() {
             ))}
           </div>
 
-          {/* Loading Bar */}
           <div className="h-1 mt-2 rounded-full bg-zinc-900 overflow-hidden">
             <div
               className={`h-full bg-green-500 transition-all duration-500 ${
@@ -266,7 +262,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Songs Grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-5">
           {songs.map((song, index) => {
             const liked = favorites.find(
@@ -333,14 +329,16 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Spotify Mini Player */}
+      {/* Mini Player */}
       {current && (
         <div className="fixed bottom-3 left-3 right-3 z-50">
           <div className="max-w-5xl mx-auto rounded-2xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl overflow-hidden">
+            {/* Progress */}
             <div className="h-1 bg-zinc-800">
               <div className="h-full w-1/3 bg-green-500 rounded-r-full" />
             </div>
 
+            {/* Player Top */}
             <div className="flex items-center gap-3 p-3">
               <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0">
                 <img
@@ -372,25 +370,33 @@ export default function Page() {
                 ✕
               </button>
             </div>
-          
-          {/* Quality Selector */}
-<div className="px-3 pb-3">
-  <div className="flex gap-2 overflow-x-auto pb-1">
-    {["Data Saver", "Normal", "High", "Best"].map((q) => (
-      <button
-        key={q}
-        onClick={() => setQuality(q)}
-        className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
-          quality === q
-            ? "bg-green-500 text-black"
-            : "bg-zinc-800 text-white"
-        }`}
-      >
-        {q}
-      </button>
-    ))}
-  </div>
-</div>
+
+            {/* Quality Selector */}
+            <div className="px-3 pb-3">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {[
+                  "Data Saver",
+                  "Normal",
+                  "High",
+                  "Best",
+                ].map((q) => (
+                  <button
+                    key={q}
+                    onClick={() =>
+                      setQuality(q)
+                    }
+                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                      quality === q
+                        ? "bg-green-500 text-black"
+                        : "bg-zinc-800 text-white"
+                    }`}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <iframe
             width="0"
@@ -404,4 +410,3 @@ export default function Page() {
     </main>
   );
         }
-                  
