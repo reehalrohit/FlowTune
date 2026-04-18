@@ -41,7 +41,7 @@ export default function Page() {
   function toggleFavorite(song: Song) {
     const exists = favorites.find((x) => x.id === song.id);
 
-    let updated = [];
+    let updated: Song[] = [];
 
     if (exists) {
       updated = favorites.filter((x) => x.id !== song.id);
@@ -70,7 +70,7 @@ export default function Page() {
     const data = await res.json();
 
     const results =
-      data.items?.slice(0, 12).map((item: any) => ({
+      data.items?.slice(0, 15).map((item: any) => ({
         id: item.id,
         title: item.title,
         thumbnail: item.thumbnail,
@@ -84,7 +84,7 @@ export default function Page() {
     const data = await res.json();
 
     const results =
-      data.items?.slice(0, 12).map((item: any) => ({
+      data.items?.slice(0, 15).map((item: any) => ({
         id: item.id,
         title: item.title,
         thumbnail: item.thumbnail,
@@ -100,6 +100,7 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-black text-white pb-32">
       <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Header */}
         <h1 className="text-5xl font-black text-green-500">
           FlowTune
         </h1>
@@ -159,7 +160,7 @@ export default function Page() {
               Favorites
             </h2>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {favorites.slice(0, 4).map((song) => (
                 <button
                   key={song.id}
@@ -180,38 +181,82 @@ export default function Page() {
           </div>
         )}
 
-        {/* Trending */}
-        <div className="mt-8">
-          <h2 className="text-lg font-bold mb-3">
+        {/* Trending Header */}
+        <div className="mt-8 rounded-3xl p-5 bg-gradient-to-r from-green-500 to-emerald-700 text-black">
+          <div className="text-sm font-bold uppercase">
             Trending Now
-          </h2>
+          </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {songs.map((song) => {
-              const liked = favorites.find(
-                (x) => x.id === song.id
-              );
+          <div className="text-3xl font-black mt-2">
+            Top Hits Today
+          </div>
 
-              return (
-                <div
-                  key={song.id}
-                  className="rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800"
-                >
+          <div className="text-sm mt-2 opacity-80">
+            Global charts • Most played tracks
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mt-4">
+          {[
+            "Top 50",
+            "India",
+            "Global",
+            "Punjabi",
+            "Pop",
+            "Hip Hop",
+            "Love",
+            "Workout",
+          ].map((tag) => (
+            <button
+              key={tag}
+              className="shrink-0 px-4 py-2 rounded-full bg-zinc-900 border border-zinc-800 text-sm"
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+
+        {/* Trending Grid */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-5">
+          {songs.map((song, index) => {
+            const liked = favorites.find(
+              (x) => x.id === song.id
+            );
+
+            return (
+              <div
+                key={song.id}
+                className="group rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-green-500 transition"
+              >
+                <div className="relative">
+                  <img
+                    src={song.thumbnail}
+                    className="w-full aspect-square object-cover"
+                  />
+
+                  <div className="absolute top-2 left-2 h-8 w-8 rounded-full bg-black/80 text-white text-sm font-bold flex items-center justify-center">
+                    {index + 1}
+                  </div>
+
                   <button
                     onClick={() => setCurrent(song.id)}
-                    className="w-full text-left"
+                    className="absolute bottom-3 right-3 h-11 w-11 rounded-full bg-green-500 text-black font-black"
                   >
-                    <img
-                      src={song.thumbnail}
-                      className="w-full aspect-square object-cover"
-                    />
-
-                    <div className="p-3 text-sm font-semibold line-clamp-2 min-h-[44px]">
-                      {song.title}
-                    </div>
+                    ▶
                   </button>
+                </div>
 
-                  <div className="px-3 pb-3 flex gap-2">
+                <div className="p-3">
+                  <div className="text-sm font-semibold line-clamp-2 min-h-[40px]">
+                    {song.title}
+                  </div>
+
+                  <div className="text-xs text-zinc-500 mt-1">
+                    #{index + 1} in charts
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
                     <button
                       onClick={() => setCurrent(song.id)}
                       className="flex-1 py-2 rounded-xl bg-green-500 text-black text-sm font-bold"
@@ -227,9 +272,9 @@ export default function Page() {
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
