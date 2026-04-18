@@ -8,14 +8,40 @@ type Song = {
   thumbnail: string;
 };
 
+const chartTags = [
+  "Top 50",
+  "India",
+  "Global",
+  "Punjabi",
+  "Pop",
+  "Hip Hop",
+  "Love",
+  "Workout",
+];
+
+const chartQueryMap: Record<string, string> = {
+  "Top 50": "top 50 songs",
+  India: "india top songs",
+  Global: "global top songs",
+  Punjabi: "punjabi hits",
+  Pop: "pop hits",
+  "Hip Hop": "hip hop hits",
+  Love: "love songs",
+  Workout: "workout songs",
+};
+
 export default function Page() {
   const [query, setQuery] = useState("");
   const [songs, setSongs] = useState<Song[]>([]);
   const [current, setCurrent] = useState("");
-  const [quality, setQuality] = useState("Normal");
+  const [quality] = useState("Normal");
 
   const [recent, setRecent] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<Song[]>([]);
+
+  const [activeChart, setActiveChart] =
+    useState("Top 50");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const r = localStorage.getItem("recentSearches");
@@ -23,6 +49,8 @@ export default function Page() {
 
     if (r) setRecent(JSON.parse(r));
     if (f) setFavorites(JSON.parse(f));
+
+    loadChart("Top 50");
   }, []);
 
   function saveRecent(value: string) {
@@ -32,6 +60,7 @@ export default function Page() {
     ].slice(0, 8);
 
     setRecent(updated);
+
     localStorage.setItem(
       "recentSearches",
       JSON.stringify(updated)
@@ -39,68 +68,65 @@ export default function Page() {
   }
 
   function toggleFavorite(song: Song) {
-    const exists = favorites.find((x) => x.id === song.id);
+    const exists = favorites.find(
+      (x) => x.id === song.id
+    );
 
-    let updated: Song[] = [];
-
-    if (exists) {
-      updated = favorites.filter((x) => x.id !== song.id);
-    } else {
-      updated = [song, ...favorites];
-    }
+    const updated = exists
+      ? favorites.filter((x) => x.id !== song.id)
+      : [song, ...favorites];
 
     setFavorites(updated);
+
     localStorage.setItem(
       "favorites",
       JSON.stringify(updated)
     );
   }
 
+  async function fetchSongs(search: string) {
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(search)}`
+      );
+
+      const data = await res.json();
+
+      const results =
+        data.items?.slice(0, 15).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          thumbnail: item.thumbnail,
+        })) || [];
+
+      setSongs(results);
+    } catch {
+      setSongs([]);
+    }
+
+    setLoading(false);
+  }
+
   async function searchSongs(value?: string) {
     const q = value || query;
-
     if (!q.trim()) return;
 
     saveRecent(q);
-
-    const res = await fetch(
-      `/api/search?q=${encodeURIComponent(q)}`
-    );
-
-    const data = await res.json();
-
-    const results =
-      data.items?.slice(0, 15).map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        thumbnail: item.thumbnail,
-      })) || [];
-
-    setSongs(results);
+    await fetchSongs(q);
   }
 
-  async function loadTrending() {
-    const res = await fetch(`/api/search?q=top songs`);
-    const data = await res.json();
+  async function loadChart(tag: string) {
+    setActiveChart(tag);
+    setQuery(tag);
 
-    const results =
-      data.items?.slice(0, 15).map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        thumbnail: item.thumbnail,
-      })) || [];
-
-    setSongs(results);
+    await fetchSongs(chartQueryMap[tag] || tag);
   }
-
-  useEffect(() => {
-    loadTrending();
-  }, []);
 
   return (
     <main className="min-h-screen bg-black text-white pb-32">
       <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* Header */}
         <h1 className="text-5xl font-black text-green-500">
           FlowTune
         </h1>
@@ -113,12 +139,15 @@ export default function Page() {
         <div className="flex gap-2 mt-6">
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) =>
+              setQuery(e.target.value)
+            }
             onKeyDown={(e) =>
-              e.key === "Enter" && searchSongs()
+              e.key === "Enter" &&
+              searchSongs()
             }
             placeholder="Search songs..."
-            className="flex-1 h-14 px-4 rounded-2xl bg-zinc-900 border border-zinc-800"
+            className="flex-1 h-14 px-4 rounded-2xl bg-zinc-900 border border-zinc-800 outline-none"
           />
 
           <button
@@ -129,7 +158,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Recent Searches */}
+        {/* Recent */}
         {recent.length > 0 && (
           <div className="mt-6">
             <h2 className="text-lg font-bold mb-3">
@@ -161,60 +190,80 @@ export default function Page() {
             </h2>
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {favorites.slice(0, 4).map((song) => (
-                <button
-                  key={song.id}
-                  onClick={() => setCurrent(song.id)}
-                  className="rounded-2xl overflow-hidden bg-zinc-900"
-                >
-                  <img
-                    src={song.thumbnail}
-                    className="w-full aspect-square object-cover"
-                  />
+              {favorites
+                .slice(0, 4)
+                .map((song) => (
+                  <button
+                    key={song.id}
+                    onClick={() =>
+                      setCurrent(song.id)
+                    }
+                    className="rounded-2xl overflow-hidden bg-zinc-900"
+                  >
+                    <img
+                      src={song.thumbnail}
+                      className="w-full aspect-square object-cover"
+                    />
 
-                  <div className="p-2 text-sm line-clamp-2">
-                    {song.title}
-                  </div>
-                </button>
-              ))}
+                    <div className="p-2 text-sm line-clamp-2">
+                      {song.title}
+                    </div>
+                  </button>
+                ))}
             </div>
           </div>
         )}
 
-        {/* Trending Header */}
+        {/* Hero */}
         <div className="mt-8 rounded-3xl p-5 bg-gradient-to-r from-green-500 to-emerald-700 text-black">
           <div className="text-sm font-bold uppercase">
             Trending Now
           </div>
 
           <div className="text-3xl font-black mt-2">
-            Top Hits Today
+            {activeChart}
           </div>
 
           <div className="text-sm mt-2 opacity-80">
-            Global charts • Most played tracks
+            Tap categories to switch charts
           </div>
         </div>
 
-        {/* Category Pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mt-4">
-          {[
-            "Top 50",
-            "India",
-            "Global",
-            "Punjabi",
-            "Pop",
-            "Hip Hop",
-            "Love",
-            "Workout",
-          ].map((tag) => (
-            <button
-              key={tag}
-              className="shrink-0 px-4 py-2 rounded-full bg-zinc-900 border border-zinc-800 text-sm"
-            >
-              {tag}
-            </button>
-          ))}
+        {/* Charts Pro UI */}
+        <div className="mt-4">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {chartTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() =>
+                  loadChart(tag)
+                }
+                disabled={loading}
+                className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${
+                  activeChart === tag
+                    ? "bg-green-500 text-black scale-105"
+                    : "bg-zinc-900 border border-zinc-800 text-white"
+                } ${
+                  loading
+                    ? "opacity-70"
+                    : "active:scale-95"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+
+          {/* Loading Bar */}
+          <div className="h-1 mt-2 rounded-full bg-zinc-900 overflow-hidden">
+            <div
+              className={`h-full bg-green-500 transition-all duration-500 ${
+                loading
+                  ? "w-1/2 animate-pulse"
+                  : "w-full"
+              }`}
+            />
+          </div>
         </div>
 
         {/* Grid */}
@@ -227,7 +276,7 @@ export default function Page() {
             return (
               <div
                 key={song.id}
-                className="group rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-green-500 transition"
+                className="rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-green-500 transition"
               >
                 <div className="relative">
                   <img
@@ -240,7 +289,9 @@ export default function Page() {
                   </div>
 
                   <button
-                    onClick={() => setCurrent(song.id)}
+                    onClick={() =>
+                      setCurrent(song.id)
+                    }
                     className="absolute bottom-3 right-3 h-11 w-11 rounded-full bg-green-500 text-black font-black"
                   >
                     ▶
@@ -258,14 +309,18 @@ export default function Page() {
 
                   <div className="flex gap-2 mt-3">
                     <button
-                      onClick={() => setCurrent(song.id)}
+                      onClick={() =>
+                        setCurrent(song.id)
+                      }
                       className="flex-1 py-2 rounded-xl bg-green-500 text-black text-sm font-bold"
                     >
                       Play
                     </button>
 
                     <button
-                      onClick={() => toggleFavorite(song)}
+                      onClick={() =>
+                        toggleFavorite(song)
+                      }
                       className="px-3 rounded-xl bg-zinc-800"
                     >
                       {liked ? "♥" : "♡"}
@@ -304,23 +359,15 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button className="h-9 w-9 rounded-full bg-zinc-800">
-                  ⏮
-                </button>
-
-                <button className="h-11 w-11 rounded-full bg-green-500 text-black font-black text-lg">
-                  ▶
-                </button>
-
-                <button className="h-9 w-9 rounded-full bg-zinc-800">
-                  ⏭
-                </button>
-              </div>
+              <button className="h-11 w-11 rounded-full bg-green-500 text-black font-black text-lg">
+                ▶
+              </button>
 
               <button
-                onClick={() => setCurrent("")}
-                className="h-9 w-9 rounded-full bg-zinc-800 text-sm"
+                onClick={() =>
+                  setCurrent("")
+                }
+                className="h-9 w-9 rounded-full bg-zinc-800"
               >
                 ✕
               </button>
