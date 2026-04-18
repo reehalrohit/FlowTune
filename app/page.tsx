@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 type Song = {
   id: string;
@@ -11,18 +16,42 @@ type Song = {
 export default function Page() {
   const [query, setQuery] = useState("");
   const [songs, setSongs] = useState<Song[]>([]);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [quality, setQuality] = useState("Best");
-  const [favorites, setFavorites] = useState<Song[]>([]);
-  const [progress, setProgress] = useState(0);
+  const [currentSong, setCurrentSong] =
+    useState<Song | null>(null);
+  const [playing, setPlaying] =
+    useState(false);
+  const [quality, setQuality] =
+    useState("Best");
+  const [favorites, setFavorites] =
+    useState<Song[]>([]);
+  const [progress, setProgress] =
+    useState(0);
+
+  const audioRef =
+    useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const f = localStorage.getItem("favorites");
-    if (f) setFavorites(JSON.parse(f));
+    const f =
+      localStorage.getItem("favorites");
+
+    if (f)
+      setFavorites(JSON.parse(f));
+
     loadTrending();
   }, []);
 
+  /* Real audio play/pause */
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    if (playing && currentSong) {
+      audioRef.current.play().catch(() => {});
+    } else {
+      audioRef.current.pause();
+    }
+  }, [playing, currentSong, quality]);
+
+  /* Visual progress */
   useEffect(() => {
     if (!playing || !currentSong) return;
 
@@ -33,19 +62,26 @@ export default function Page() {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () =>
+      clearInterval(timer);
   }, [playing, currentSong]);
 
   async function loadTrending() {
-    const res = await fetch("/api/search?q=top songs");
+    const res = await fetch(
+      "/api/search?q=top songs"
+    );
+
     const data = await res.json();
 
     setSongs(
-      data.items?.slice(0, 20).map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        thumbnail: item.thumbnail,
-      })) || []
+      data.items
+        ?.slice(0, 20)
+        .map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          thumbnail:
+            item.thumbnail,
+        })) || []
     );
   }
 
@@ -53,17 +89,22 @@ export default function Page() {
     if (!query.trim()) return;
 
     const res = await fetch(
-      `/api/search?q=${encodeURIComponent(query)}`
+      `/api/search?q=${encodeURIComponent(
+        query
+      )}`
     );
 
     const data = await res.json();
 
     setSongs(
-      data.items?.slice(0, 20).map((item: any) => ({
-        id: item.id,
-        title: item.title,
-        thumbnail: item.thumbnail,
-      })) || []
+      data.items
+        ?.slice(0, 20)
+        .map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          thumbnail:
+            item.thumbnail,
+        })) || []
     );
   }
 
@@ -74,33 +115,52 @@ export default function Page() {
   }
 
   function toggleFavorite(song: Song) {
-    const exists = favorites.find((x) => x.id === song.id);
+    const exists = favorites.find(
+      (x) => x.id === song.id
+    );
 
     const updated = exists
-      ? favorites.filter((x) => x.id !== song.id)
+      ? favorites.filter(
+          (x) => x.id !== song.id
+        )
       : [song, ...favorites];
 
     setFavorites(updated);
-    localStorage.setItem("favorites", JSON.stringify(updated));
+
+    localStorage.setItem(
+      "favorites",
+      JSON.stringify(updated)
+    );
   }
 
   const currentIndex = useMemo(() => {
     if (!currentSong) return -1;
-    return songs.findIndex((x) => x.id === currentSong.id);
+
+    return songs.findIndex(
+      (x) =>
+        x.id === currentSong.id
+    );
   }, [songs, currentSong]);
 
   function nextSong() {
     if (currentIndex < 0) return;
+
     playSong(
-      songs[(currentIndex + 1) % songs.length]
+      songs[
+        (currentIndex + 1) %
+          songs.length
+      ]
     );
   }
 
   function prevSong() {
     if (currentIndex < 0) return;
+
     playSong(
       songs[
-        (currentIndex - 1 + songs.length) %
+        (currentIndex -
+          1 +
+          songs.length) %
           songs.length
       ]
     );
@@ -118,6 +178,7 @@ export default function Page() {
   return (
     <main className="min-h-screen bg-black text-white pb-44">
       <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-5xl font-black text-green-500">
@@ -125,12 +186,12 @@ export default function Page() {
             </h1>
 
             <p className="text-zinc-400 mt-2">
-              Hybrid Final Edition
+              Background Play Edition
             </p>
           </div>
 
           <div className="px-3 py-2 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
-            V5
+            V6
           </div>
         </div>
 
@@ -139,7 +200,9 @@ export default function Page() {
           <input
             value={query}
             onChange={(e) =>
-              setQuery(e.target.value)
+              setQuery(
+                e.target.value
+              )
             }
             onKeyDown={(e) =>
               e.key === "Enter" &&
@@ -184,9 +247,11 @@ export default function Page() {
         {/* Songs */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-8">
           {songs.map((song) => {
-            const liked = favorites.find(
-              (x) => x.id === song.id
-            );
+            const liked =
+              favorites.find(
+                (x) =>
+                  x.id === song.id
+              );
 
             return (
               <div
@@ -195,13 +260,17 @@ export default function Page() {
               >
                 <div className="relative">
                   <img
-                    src={song.thumbnail}
+                    src={
+                      song.thumbnail
+                    }
                     className="w-full aspect-square object-cover"
                   />
 
                   <button
                     onClick={() =>
-                      playSong(song)
+                      playSong(
+                        song
+                      )
                     }
                     className="absolute bottom-3 right-3 h-12 w-12 rounded-full bg-green-500 text-black font-black"
                   >
@@ -217,7 +286,9 @@ export default function Page() {
                   <div className="flex gap-2 mt-3">
                     <button
                       onClick={() =>
-                        playSong(song)
+                        playSong(
+                          song
+                        )
                       }
                       className="flex-1 py-2 rounded-xl bg-green-500 text-black font-bold"
                     >
@@ -226,11 +297,15 @@ export default function Page() {
 
                     <button
                       onClick={() =>
-                        toggleFavorite(song)
+                        toggleFavorite(
+                          song
+                        )
                       }
                       className="px-3 rounded-xl bg-zinc-800"
                     >
-                      {liked ? "♥" : "♡"}
+                      {liked
+                        ? "♥"
+                        : "♡"}
                     </button>
                   </div>
                 </div>
@@ -247,7 +322,7 @@ export default function Page() {
             {/* Progress */}
             <div className="h-1 bg-zinc-800">
               <div
-                className="h-full bg-green-500 rounded-r-full transition-all duration-1000"
+                className="h-full bg-green-500 transition-all duration-1000"
                 style={{
                   width: `${progress}%`,
                 }}
@@ -257,17 +332,22 @@ export default function Page() {
             <div className="p-3">
               <div className="flex items-center gap-3">
                 <img
-                  src={currentSong.thumbnail}
+                  src={
+                    currentSong.thumbnail
+                  }
                   className="h-14 w-14 rounded-xl object-cover"
                 />
 
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">
-                    {currentSong.title}
+                    {
+                      currentSong.title
+                    }
                   </div>
 
                   <div className="text-xs text-zinc-400">
-                    Quality • {quality}
+                    Quality •{" "}
+                    {quality}
                   </div>
                 </div>
 
@@ -280,11 +360,15 @@ export default function Page() {
 
                 <button
                   onClick={() =>
-                    setPlaying(!playing)
+                    setPlaying(
+                      !playing
+                    )
                   }
                   className="h-12 w-12 rounded-full bg-green-500 text-black font-black"
                 >
-                  {playing ? "❚❚" : "▶"}
+                  {playing
+                    ? "❚❚"
+                    : "▶"}
                 </button>
 
                 <button
@@ -295,7 +379,9 @@ export default function Page() {
                 </button>
 
                 <button
-                  onClick={downloadSong}
+                  onClick={
+                    downloadSong
+                  }
                   className="h-10 px-3 rounded-xl bg-zinc-800"
                 >
                   ⬇
@@ -303,54 +389,41 @@ export default function Page() {
 
                 <button
                   onClick={() => {
-                    setCurrentSong(null);
-                    setPlaying(false);
-                    setProgress(0);
+                    setCurrentSong(
+                      null
+                    );
+                    setPlaying(
+                      false
+                    );
+                    setProgress(
+                      0
+                    );
                   }}
                   className="h-10 w-10 rounded-full bg-zinc-800"
                 >
                   ✕
                 </button>
               </div>
-
-              {/* Quality */}
-              <div className="flex gap-2 mt-3 overflow-x-auto">
-                {[
-                  "Data Saver",
-                  "Normal",
-                  "High",
-                  "Best",
-                ].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() =>
-                      setQuality(q)
-                    }
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold ${
-                      quality === q
-                        ? "bg-green-500 text-black"
-                        : "bg-zinc-800"
-                    }`}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
 
-          {/* Hidden Playback */}
-          {playing && (
-            <iframe
-              width="0"
-              height="0"
-              allow="autoplay"
+          {/* Real Hidden Audio */}
+          {currentSong && (
+            <audio
+              ref={audioRef}
+              autoPlay={
+                playing
+              }
+              preload="none"
               className="hidden"
-              src={`https://www.youtube.com/embed/${currentSong.id}?autoplay=1&playsinline=1`}
+              src={`/api/stream?id=${currentSong.id}&quality=${quality}`}
+              onEnded={
+                nextSong
+              }
             />
           )}
         </div>
       )}
     </main>
   );
-        }
+      }
