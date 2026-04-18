@@ -217,7 +217,7 @@ export default function Page() {
           ))}
         </div>
 
-        {/* Trending Grid */}
+        {/* Grid */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 mt-5">
           {songs.map((song, index) => {
             const liked = favorites.find(
@@ -278,31 +278,62 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Mini Player */}
+      {/* Spotify Mini Player */}
       {current && (
-        <div className="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 p-3">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-zinc-400">
-                Now Playing • {quality}
+        <div className="fixed bottom-3 left-3 right-3 z-50">
+          <div className="max-w-5xl mx-auto rounded-2xl bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 shadow-2xl overflow-hidden">
+            <div className="h-1 bg-zinc-800">
+              <div className="h-full w-1/3 bg-green-500 rounded-r-full" />
+            </div>
+
+            <div className="flex items-center gap-3 p-3">
+              <div className="h-14 w-14 rounded-xl overflow-hidden shrink-0">
+                <img
+                  src={`https://i.ytimg.com/vi/${current}/mqdefault.jpg`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate">
+                  Now Playing
+                </div>
+
+                <div className="text-xs text-zinc-400 truncate">
+                  Quality • {quality}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button className="h-9 w-9 rounded-full bg-zinc-800">
+                  ⏮
+                </button>
+
+                <button className="h-11 w-11 rounded-full bg-green-500 text-black font-black text-lg">
+                  ▶
+                </button>
+
+                <button className="h-9 w-9 rounded-full bg-zinc-800">
+                  ⏭
+                </button>
               </div>
 
               <button
                 onClick={() => setCurrent("")}
-                className="text-sm px-3 py-1 rounded-lg bg-zinc-800"
+                className="h-9 w-9 rounded-full bg-zinc-800 text-sm"
               >
-                Close
+                ✕
               </button>
             </div>
-
-            <iframe
-              width="100%"
-              height="90"
-              src={`https://www.youtube.com/embed/${current}?autoplay=1`}
-              allow="autoplay"
-              className="rounded-xl"
-            />
           </div>
+
+          <iframe
+            width="0"
+            height="0"
+            src={`https://www.youtube.com/embed/${current}?autoplay=1`}
+            allow="autoplay"
+            className="hidden"
+          />
         </div>
       )}
     </main>
