@@ -192,13 +192,13 @@ const [quality, setQuality] = useState("Normal");
                 .slice(0, 4)
                 .map((song) => (
                   <button
-                    key={song.id}
-                    onClick={() =>
-                      setCurrent(song.id);
-setCurrentSong(song);
-                    }
-                    className="rounded-2xl overflow-hidden bg-zinc-900"
-                  >
+  key={song.id}
+  onClick={() => {
+    setCurrent(song.id);
+    setCurrentSong(song);
+  }}
+  className="rounded-2xl overflow-hidden bg-zinc-900"
+>
                     <img
                       src={song.thumbnail}
                       className="w-full aspect-square object-cover"
@@ -413,4 +413,4 @@ setCurrentSong(song);
       )}
     </main>
   );
-        }
+                      }
